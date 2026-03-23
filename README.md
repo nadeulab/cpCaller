@@ -16,4 +16,4 @@ devtools::install_github("https://github.com/nadeulab/cpCaller/tree/main",
 
 ## Manual
 
-A detailed vignette showing how to run cpCaller can be found [here](https://github.com/nadeulabl/cpCaller/vignettes/).
+A detailed vignette showing how to run cpCaller can be found [here](https://github.com/nadeulab/cpCaller/vignettes/).
