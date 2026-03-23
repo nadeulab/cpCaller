@@ -1,22 +1,34 @@
-#' Title
+#' Plot gene-level copy number alterations
 #'
-#' @description
-#'A short description...
+#' @description This function plots gene-level copy number alterations (CNA; i.e., deletions and gains).
+#' It takes as input the output of cpCall.
 #'
-#'
-#' @param ccObj
-#' @param plotType
-#' @param purity
+#' @param ccObj ccObj to be used (output of cpCall function).
+#' @param plotType Type of plot to accommodate multiple formats. Supported options:
+#' \itemize{
+#'   \item "simple": standard cpPlot output useful to plot a few genes
+#'   \item "genome": option to plot all genes genome-wide
+#' }
+#' @param purity Path to tab-separated table with the purity of each tumor sample (optional). The table must contain at least two columns labelled "Sample" and "Purity".
+#' @param lstGenes Vector with list of genes to be plotted. If not provided, all gene names will be plotted. Only applicable to ploType="simple".
+#' @param chrom Allows to specify a chromosome to plot only those genes located in that chromosome. Only applicable to ploType="simple".
+#' @param genomeVersion Specify genome version (hg19 or hg38) when plotting genome-wide CN calls.
 #'
 #' @import patchwork
 #' @import ggplot2
 #' @import reshape2
+#' @import karyoploteR
 #'
-#' @return
+#' @return This function returns a list of ggplots, one plot per sample analyzed.
+#'
 #' @export
 #'
 #' @examples
-cpPlot <- function(ccObj, plotType = "simple", purity = NULL){
+#' \dontrun{
+#' cpp <- cpPlot(cpc, "simple", purity)
+#' }
+#'
+cpPlot <- function(ccObj, plotType = "simple", purity = NULL, lstGenes = NULL, chrom = NULL, genomeVersion="hg38"){
   message("cpPlot: starting...")
   if(plotType == "simple"){
     message("... plotType = simple...")
@@ -40,6 +52,9 @@ cpPlot <- function(ccObj, plotType = "simple", purity = NULL){
     }
     pdb$Call <- factor(pdb$Call, levels=c("reference", "wt", "del", "homodel", "gain", "highgain"))
     pdb <- pdb[nrow(pdb):1,]
+
+    if (!is.null(lstGenes)) { pdb <- pdb[pdb$gene %in% lstGenes,] }
+    if (!is.null(chrom)) { pdb <- pdb[pdb$chrom == chrom,] }
 
     pdb$value[pdb$value > 4] <- 4.02
 
@@ -87,6 +102,60 @@ cpPlot <- function(ccObj, plotType = "simple", purity = NULL){
     }
     names(pList) <- as.character(sort(unique(pdb$variable[pdb$NormOrTum=="tumor"])))
 
+    message("Done!")
+    return(pList)
+
+  } else if (plotType == "genome"){
+    message("... plotType = genome...")
+    message("1. Preparing inputs and tables...")
+    countsTumor <- ccObj$table_normalizedCountsTumor
+    countsNormal <- ccObj$table_normalizedCountsNormal
+    CN <- ccObj$table_CNcalls
+    SAM <- ccObj$table_sampleMetrics
+
+    pdb <- reshape2::melt(countsTumor, id.vars = c(1:6))
+    pdb <- rbind(pdb, reshape2::melt(countsNormal, id.vars=c(1:6)))
+    pdb$name_st <- paste0(pdb$gene, "_", pdb$start)
+    pdb$NormOrTum[pdb$variable %in% colnames(countsTumor)[7:ncol(countsTumor)]] <- "tumor"
+    pdb$NormOrTum[pdb$variable %in% colnames(countsNormal)[7:ncol(countsNormal)]] <- "normal"
+
+    pdb <- merge(
+      pdb,
+      CN[, c("Sample", "Gene", "Call")],
+      by.x = c("variable", "gene"),
+      by.y = c("Sample", "Gene"),
+      all.x = TRUE
+    )
+    pdb$Call[is.na(pdb$Call)] <- "reference"
+    pdb$Call <- factor(pdb$Call, levels=c("reference", "wt", "NoResult_Noise", "del", "homodel", "gain", "highgain"))
+    pdb <- pdb[nrow(pdb):1,]
+
+    colorsCNA <- c("gray91", "#2E8B57", "gray50", "#DC143C", "#800020", "#4682B4", "#191970")
+    names(colorsCNA) <- c("reference", "wt", "NoResult_Noise", "del", "homodel", "gain", "highgain")
+
+    message("2. Ploting...")
+    pList <- list()
+    for(i in 1:length(unique(pdb$variable[pdb$NormOrTum=="tumor"]))){
+      sam <- as.character(sort(unique(pdb$variable[pdb$NormOrTum=="tumor"])))[i]
+      samplepdb <- pdb[pdb$variable==sam,]
+      samplepdb <- samplepdb[!duplicated(samplepdb$gene),]
+      cpCaller.gr <- GRanges(seqnames = paste0("chr", samplepdb$chrom),
+                              ranges = IRanges(start = samplepdb$start, end = samplepdb$end),
+                              sample = samplepdb$variable,
+                              CN = as.numeric(samplepdb$value),
+                              type = samplepdb$Call, color = colorsCNA[samplepdb$Call])
+      markers <- samplepdb[!duplicated(samplepdb[,"gene"]),c("chrom","start","gene")]
+      markers$color <- colorsCNA[samplepdb$Call]
+      if (!grepl("chr",markers$chrom[1])){
+        markers$chrom <- paste0("chr", markers$chrom)
+      }
+      kp <- plotKaryotype(genome=genomeVersion, main = sam)
+      kp <- kpPlotRegions(kp, cpCaller.gr, col=cpCaller.gr$color, r0 = 0, r1 = 0.3)
+      kp <- kpPlotMarkers(kp, chr=markers$chrom, x=markers$start, labels=markers$gene, text.orientation = "horizontal",
+                          y = 0, r0 = 0.3, label.color = markers$color, line.color = markers$color, adjust.label.position = T, cex=0.7)
+      pList[[i]] <- recordPlot()
+    }
+    names(pList) <- as.character(sort(unique(pdb$variable[pdb$NormOrTum=="tumor"])))
     message("Done!")
     return(pList)
   }

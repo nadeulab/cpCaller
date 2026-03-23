@@ -1,32 +1,65 @@
-#' Title
+#' Call gene-level copy number alterations
 #'
-#' @description
-#'A short description...
+#' @description This function calls gene-level copy number alterations (CNA; i.e., deletions and gains).
+#' It takes as input a list of BAM files and a bed-like file with the regions of interest.
 #'
-#'
-#' @param bedFile
-#' @param bamFilesTumors
-#' @param bamFilesNormals
-#' @param normalization
-#' @param lstGenes
-#' @param purity
-#' @param selectNormalsByCosine
-#' @param numOfNormalsByCosine
-#' @param tumorsToUseAsNormal
-#' @param FFPE
-#' @param smooth
-#' @param callOnly
-#' @param ccObj
+#' @param bedFile Path to bed-like file containing the regions/genes to be analyzed. This file must not include header (colnames) and must have 4 columns: chrom, start, end, gene name.
+#' @param bamFilesTumors Vector with the paths to the tumor BAM files.
+#' @param bamFilesNormals Vector with the paths to the normal BAM files.
+#' @param normalization Method use to normalize the counts.
+#' Supported options:
+#' \itemize{
+#'   \item "median_gene": Normalizes the coverage of each target region by the mean coverage of the median coverage of each gene
+#'   \item "mean_coverage": Normalizes the coverage of each target region by the mean coverage of the sample
+#' }
+#' @param lstGenes Vector with list of genes to be used for the analysis. If not provided, all gene names included in the bedFile will be used.
+#' @param purity Path to tab-separated table with the purity of each tumor sample (optional). The table must contain at least two columns labelled "Sample" and "Purity".
+#' @param selectNormalsByCosine If TRUE, a specified number of normal samples (see below "numOfNormalsByCosine") are selected based on their cosine
+#' similarity to each tumor sample and used as reference.
+#' @param numOfNormalsByCosine Number of normal samples to be used as a reference, which are selected based on cosine similarity.
+#' @param tumorsToUseAsNormal If "bamFilesNormals" is NULL, this parameter defines the number of tumors samples that are used as a reference.
+#' @param FFPE If TRUE, noise is force-assigned to "high".
+#' @param smooth If TRUE, the coverage of each target region is smoothed taking the mean of the three contiguos regions.
+#' @param callOnly If TRUE, steps 1 and 2 to process the bed file and calculate the raw coverage of each region/sample are skipped.
+#' @param ccObj ccObj to be re-used if callOnly is TRUE.
 #'
 #' @import Rsamtools
 #' @import progress
 #' @import ggplot2
 #' @import reshape2
 #'
-#' @return
+#' @return This function returns an object with the following elements:
+#' \itemize{
+#'   \item plot_SD_distribution
+#'   \item plot_Normalized_coverage
+#'   \item plot_SD_samples
+#'   \item table_rawCountsNormal
+#'   \item table_rawCountsTumor
+#'   \item table_normalizedCountsNormal
+#'   \item table_normalizedCountsTumor
+#'   \item table_tumorAndSelectedNormals
+#'   \item table_sampleMetrics
+#'   \item table_CNcalls
+#' }
+#'
+#' @details
+#' The steps that this functions performs are:
+#'  1. Process bed-like file
+#'  2. Calculate mean coverage of each target region
+#'  3. Normalize coverage per sample and
+#'  4. Normalize coverage of each window
+#'  5. Smooth coverage (if specified)
+#'  6. Estimate noise and call gene-level copy number alterations
+#'  7. Draw quality control plots
+#'  8. Prepare outputs
+#'
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' cpc <- cpCall(bedFile, bamFilesTumors, bamFilesNormals, normalization, lstGenes, purity)
+#' }
+#'
 cpCall <- function(bedFile, bamFilesTumors, bamFilesNormals = NULL, normalization = "median_gene", lstGenes = NULL, purity = NULL,
                    selectNormalsByCosine = FALSE, numOfNormalsByCosine = 3, tumorsToUseAsNormal = 3,
                    FFPE = F, smooth = FALSE, callOnly = FALSE, ccObj = NULL){

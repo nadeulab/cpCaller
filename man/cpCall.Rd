@@ -2,7 +2,7 @@
 % Please edit documentation in R/cpCall.R
 \name{cpCall}
 \alias{cpCall}
-\title{Title}
+\title{Call gene-level copy number alterations}
 \usage{
 cpCall(
   bedFile,
@@ -21,8 +21,73 @@ cpCall(
 )
 }
 \arguments{
-\item{ccObj}{}
+\item{bedFile}{Path to bed-like file containing the regions/genes to be analyzed. This file must not include header (colnames) and must have 4 columns: chrom, start, end, gene name.}
+
+\item{bamFilesTumors}{Vector with the paths to the tumor BAM files.}
+
+\item{bamFilesNormals}{Vector with the paths to the normal BAM files.}
+
+\item{normalization}{Method use to normalize the counts.
+Supported options:
+\itemize{
+\item "median_gene": Normalizes the coverage of each target region by the mean coverage of the median coverage of each gene
+\item "mean_coverage": Normalizes the coverage of each target region by the mean coverage of the sample
+}}
+
+\item{lstGenes}{Vector with list of genes to be used for the analysis. If not provided, all gene names included in the bedFile will be used.}
+
+\item{purity}{Path to tab-separated table with the purity of each tumor sample (optional). The table must contain at least two columns labelled "Sample" and "Purity".}
+
+\item{selectNormalsByCosine}{If TRUE, a specified number of normal samples (see below "numOfNormalsByCosine") are selected based on their cosine
+similarity to each tumor sample and used as reference.}
+
+\item{numOfNormalsByCosine}{Number of normal samples to be used as a reference, which are selected based on cosine similarity.}
+
+\item{tumorsToUseAsNormal}{If "bamFilesNormals" is NULL, this parameter defines the number of tumors samples that are used as a reference.}
+
+\item{FFPE}{If TRUE, noise is force-assigned to "high".}
+
+\item{smooth}{If TRUE, the coverage of each target region is smoothed taking the mean of the three contiguos regions.}
+
+\item{callOnly}{If TRUE, steps 1 and 2 to process the bed file and calculate the raw coverage of each region/sample are skipped.}
+
+\item{ccObj}{ccObj to be re-used if callOnly is TRUE.}
+}
+\value{
+This function returns an object with the following elements:
+\itemize{
+\item plot_SD_distribution
+\item plot_Normalized_coverage
+\item plot_SD_samples
+\item table_rawCountsNormal
+\item table_rawCountsTumor
+\item table_normalizedCountsNormal
+\item table_normalizedCountsTumor
+\item table_tumorAndSelectedNormals
+\item table_sampleMetrics
+\item table_CNcalls
+}
 }
 \description{
-A short description...
+This function calls gene-level copy number alterations (CNA; i.e., deletions and gains).
+It takes as input a list of BAM files and a bed-like file with the regions of interest.
+}
+\details{
+The steps that this functions performs are:
+\enumerate{
+\item Process bed-like file
+\item Calculate mean coverage of each target region
+\item Normalize coverage per sample and
+\item Normalize coverage of each window
+\item Smooth coverage (if specified)
+\item Estimate noise and call gene-level copy number alterations
+\item Draw quality control plots
+\item Prepare outputs
+}
+}
+\examples{
+\dontrun{
+cpc <- cpCall(bedFile, bamFilesTumors, bamFilesNormals, normalization, lstGenes, purity)
+}
+
 }

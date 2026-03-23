@@ -2,13 +2,44 @@
 % Please edit documentation in R/cpPlot.R
 \name{cpPlot}
 \alias{cpPlot}
-\title{Title}
+\title{Plot gene-level copy number alterations}
 \usage{
-cpPlot(ccObj, plotType = "simple", purity = NULL)
+cpPlot(
+  ccObj,
+  plotType = "simple",
+  purity = NULL,
+  lstGenes = NULL,
+  chrom = NULL,
+  genomeVersion = "hg38"
+)
 }
 \arguments{
-\item{purity}{}
+\item{ccObj}{ccObj to be used (output of cpCall function).}
+
+\item{plotType}{Type of plot to accommodate multiple formats. Supported options:
+\itemize{
+\item "simple": standard cpPlot output useful to plot a few genes
+\item "genome": option to plot all genes genome-wide
+}}
+
+\item{purity}{Path to tab-separated table with the purity of each tumor sample (optional). The table must contain at least two columns labelled "Sample" and "Purity".}
+
+\item{lstGenes}{Vector with list of genes to be plotted. If not provided, all gene names will be plotted. Only applicable to ploType="simple".}
+
+\item{chrom}{Allows to specify a chromosome to plot only those genes located in that chromosome. Only applicable to ploType="simple".}
+
+\item{genomeVersion}{Specify genome version (hg19 or hg38) when plotting genome-wide CN calls.}
+}
+\value{
+This function returns a list of ggplots, one plot per sample analyzed.
 }
 \description{
-A short description...
+This function plots gene-level copy number alterations (CNA; i.e., deletions and gains).
+It takes as input the output of cpCall.
+}
+\examples{
+\dontrun{
+cpp <- cpPlot(cpc, "simple", purity)
+}
+
 }
