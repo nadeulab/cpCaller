@@ -1,25 +1,18 @@
 
 # cpCaller
 
-<!-- badges: start -->
-<!-- badges: end -->
-
-The goal of cpCaller is to ...
+cpCaller is an R package to analyze gene-level copy number alterations (CNA) in next-generations sequencing (NGS) data.
 
 ## Installation
 
-You can install the development version of cpCaller like so:
+The current version of cpCaller can be installed from this GitHub repository as follows:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+install.packages("devtools")
+library(devtools)
+devtools::install_github("https://github.com/nadeulab/cpCaller/tree/main", build_vignettes = T, dependencies = T)
 ```
 
-## Example
+## Manual
 
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-library(cpCaller)
-## basic example code
-```
-
+A detailed vignette showing how to run cpCaller can be found [here](https://github.com/nadeulabl/cpCaller/vignettes/).
