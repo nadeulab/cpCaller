@@ -1,7 +1,7 @@
 
 # cpCaller
 
-cpCaller is an R package to analyze gene-level copy number alterations (CNA) in next-generations sequencing (NGS) data.
+cpCaller is an R package to analyze gene-level copy number alterations (CNA) from next-generations sequencing (NGS) data.
 
 ## Installation
 
