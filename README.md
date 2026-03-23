@@ -10,7 +10,9 @@ The current version of cpCaller can be installed from this GitHub repository as 
 ``` r
 install.packages("devtools")
 library(devtools)
-devtools::install_github("https://github.com/nadeulab/cpCaller/tree/main", build_vignettes = T, dependencies = T)
+devtools::install_github("https://github.com/nadeulab/cpCaller/tree/main", 
+    build_vignettes = T, dependencies = T
+    )
 ```
 
 ## Manual
