@@ -14,7 +14,7 @@ RoxygenNote: 7.3.2
 Maintainer: Ferran Nadeu <nadeu@recerca.clinic.cat>
 URL: https://github.com/nadeulab/cpCaller
 BugReports: https://github.com/nadeulab/cpCaller/issues
-Depends: 
+Imports: 
     ggplot2 (>= 4.0.1),
     karyoploteR (>= 1.28.0),
     patchwork (>= 1.3.2),
