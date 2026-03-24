@@ -23,6 +23,7 @@
 #' @param callOnly If TRUE, steps 1 and 2 to process the bed file and calculate the raw coverage of each region/sample are skipped.
 #' @param ccObj ccObj to be re-used if callOnly is TRUE.
 #'
+#' @import GenomicRanges
 #' @import Rsamtools
 #' @import progress
 #' @import ggplot2

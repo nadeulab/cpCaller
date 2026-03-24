@@ -2,6 +2,7 @@
 
 export(cpCall)
 export(cpPlot)
+import(GenomicRanges)
 import(Rsamtools)
 import(ggplot2)
 import(karyoploteR)
